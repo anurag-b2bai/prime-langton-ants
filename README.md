@@ -36,16 +36,15 @@ At step number $N$:
 | Milestone Step $N$ | Ant Position $(X, Y)$ | Heading | Active Lit Cells | Description / Verification |
 |---|---|---|---|---|
 | **#342,000,001** | `(112894, 48653)` | 1 (RIGHT) | - | **Exact Verification Standard Target** |
-| **6.0 Arab** ($6 \times 10^9$) | `(-282807, 364925)` | 3 (LEFT) | 247,587,098 | 600 Crore Benchmark |
-| **8.6 Arab** ($8.6 \times 10^9$) | `(-261143, 354641)` | 1 (RIGHT) | 161,446,781 | **Current Active Checkpoint** |
-| **10.0 Arab** ($10 \times 10^9$) | `(56509, -79535)` | 1 (RIGHT) | 402,033,939 | 1,000 Crore Benchmark |
+| **6.0 Arab** ($6 \times 10^9$) | `(32791, 254723)` | 2 (DOWN) | 247,594,562 | 600 Crore Benchmark |
+| **8.5 Arab** ($8.5 \times 10^9$) | `(-46599, 100369)` | 1 (RIGHT) | 343,661,019 | **Current Verified Active Checkpoint** |
 
 ---
 
 ## ⚡ 3. High-Performance Architecture
 
 - **Segmented Sieve Primality Engine**: Memory footprint reduced by **99.5%** (down to 6.25 MB RAM).
-- **Dynamic 256-Bucket Open-Addressing Hash Grid**: Manages 400,000,000+ active lit cells efficiently in 1.6 GB RAM.
+- **Dynamic 256-Bucket Open-Addressing Hash Grid**: Manages 340,000,000+ active lit cells efficiently in 1.6 GB RAM.
 - **Micro-Pacing Thermal Control**: `usleep(40)` caps CPU load at ~18% (zero thermal throttling, zero system freezes).
 - **POSIX_FADV_DONTNEED & sync()**: Flushes OS page cache instantly to prevent Linux kernel OOM reboots.
 - **Live Web Visualizer**: REST API & Interactive UI on Port 6969 (`http://localhost:6969/`).
@@ -71,27 +70,11 @@ g++ -O3 fast_ant_engine.cpp -o fast_ant_engine
 ### 🔹 Step 3: Run Engine or Incremental Master Runner
 To run towards a target step (e.g. 18.0 Arab steps):
 ```bash
-# Run continuous engine from 6.0 Arab to 18.0 Arab:
-./fast_ant_engine 18000000000 6000000000
+# Run continuous engine from 8.5 Arab to 18.0 Arab:
+./fast_ant_engine 18000000000 8500000000
 
 # OR run incremental runner script:
 python3 run_incremental_ant.py
-```
-
----
-
-## 📁 5. Directory Structure
-
-```
-├── README.md                      # Comprehensive Architecture & Research Guide
-├── RESEARCH_GUIDE.md              # Research & Mathematical Deep Dive
-├── checkpoint.json                # Active simulation state (JSON)
-├── prime_langton_ant.html         # Web UI visualizer
-└── backend/
-    ├── fast_ant_engine.cpp        # Zero-hang Segmented Sieve C++ engine
-    ├── server.py                  # Python REST API server (Port 6969)
-    ├── run_incremental_ant.py     # Master incremental slice runner
-    └── checkpoint.json            # Active backend checkpoint
 ```
 
 ---
