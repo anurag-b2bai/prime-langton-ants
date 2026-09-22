@@ -1,0 +1,10 @@
+==========================================================
+  DYNAMIC BUCKET GRID PRIME LANGTON'S ANT ENGINE
+  TARGET: 18 ARAB STEPS (18000000000 STEPS)
+  RESUMING DIRECTLY FROM STEP: 10 ARAB STEPS (10000000000 STEPS)
+  ACTIVE CHECKPOINT ON DISK: 10 ARAB STEPS (10000000000 STEPS)
+==========================================================
+[C++ Engine] Building Bitset Sieve up to 18010000000 steps...
+[C++ Engine] Bitset Sieve ready in 144.106 seconds!
+[C++ Engine] 🔄 Loaded metadata from dataset/snapshot_step_10000000000.json | Ant: (56509, -79535) dir=1
+[C++ Engine] 🔄 Restoring active cell grid from dataset/snapshot_step_10000000000.bin...

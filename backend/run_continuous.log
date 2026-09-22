@@ -1,0 +1,7 @@
+==========================================================
+  ZERO-HANG CONTINUOUS PRIME LANGTON'S ANT ENGINE
+  START STEP : 6 ARAB (6000000000)
+  TARGET STEP: 18 ARAB (18000000000)
+  ACTIVE UI CHECKPOINT: 8.6 ARAB (8600000000)
+==========================================================
+[C++ Engine] Building Segmented Sieve for range [6000000000, 18000000000]...

@@ -1,0 +1,19 @@
+==========================================================
+  DYNAMIC BUCKET GRID PRIME LANGTON'S ANT ENGINE
+  TARGET: 9 ARAB STEPS (9000000000 STEPS)
+  RESUMING DIRECTLY FROM STEP: 6 ARAB STEPS (6000000000 STEPS)
+  ACTIVE CHECKPOINT ON DISK: 8.5 ARAB STEPS (8500000000 STEPS)
+==========================================================
+[C++ Engine] Building Bitset Sieve up to 9010000000 steps...
+[C++ Engine] Bitset Sieve ready in 68.1059 seconds!
+[C++ Engine] 🔄 Loaded metadata from dataset/snapshot_step_6000000000.json | Ant: (32791, 254723) dir=2
+[C++ Engine] 🔄 Restoring active cell grid from dataset/snapshot_step_6000000000.bin...
+[C++ Engine] ✅ Grid successfully restored! Active Cells: 247587098
+[C++ Engine] Step #6053828311 (6.054 Arab) | Pos: (14000, 263573) | Active Cells: 249731907 | Speed: 2840511 steps/sec
+[C++ Engine] Step #6058248409 (6.058 Arab) | Pos: (19256, 269709) | Active Cells: 249908467 | Speed: 2652725 steps/sec
+[C++ Engine] Step #6062014529 (6.062 Arab) | Pos: (16618, 266321) | Active Cells: 250055617 | Speed: 2482580 steps/sec
+[C++ Engine] Step #6094503270 (6.095 Arab) | Pos: (19847, 266269) | Active Cells: 251299492 | Speed: 3377545 steps/sec
+[C++ Engine] Step #6100000000 (6.100 Arab) | Pos: (15305, 273185) | Active Cells: 251521038 | Speed: 3166290 steps/sec
+[C++ Engine] Step #6188340316 (6.188 Arab) | Pos: (-30747, 256573) | Active Cells: 255048424 | Speed: 5446084 steps/sec
+[C++ Engine] Step #6200000000 (6.200 Arab) | Pos: (-32773, 257819) | Active Cells: 255519469 | Speed: 4778291 steps/sec
+[C++ Engine] Step #6288936499 (6.289 Arab) | Pos: (-37451, 253714) | Active Cells: 258922388 | Speed: 6441428 steps/sec

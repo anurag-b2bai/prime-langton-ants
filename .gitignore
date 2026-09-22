@@ -1,13 +1,15 @@
-# Ignore large snapshot results and datasets > 100MB
-result/
+# Allow log files and sample primes for research history
+!backend/run_*.log
+!backend/primes_sample.txt
+
+# Ignore massive gigabyte raw data dumps exceeding GitHub 100MB file limit
 dataset/
 backend/dataset/
+result/
 *.bin
-*.bmp
-*.log
-*.db
-*.idx
-*.txt
+primes_899m.txt
+primes_299m.txt
+primes_partitioned.db
 
 # Binary executables
 fast_ant_engine

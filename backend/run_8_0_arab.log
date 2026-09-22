@@ -1,0 +1,70 @@
+==========================================================
+  DYNAMIC BUCKET GRID PRIME LANGTON'S ANT ENGINE
+  TARGET: 8 ARAB STEPS (8000000000 STEPS)
+  RESUMING DIRECTLY FROM STEP: 6 ARAB STEPS (6000000000 STEPS)
+  ACTIVE CHECKPOINT ON DISK: 7.5 ARAB STEPS (7500000000 STEPS)
+==========================================================
+[C++ Engine] Building Bitset Sieve up to 8010000000 steps...
+[C++ Engine] Bitset Sieve ready in 56.3837 seconds!
+[C++ Engine] 🔄 Loaded metadata from dataset/snapshot_step_6000000000.json | Ant: (32791, 254723) dir=2
+[C++ Engine] 🔄 Restoring active cell grid from dataset/snapshot_step_6000000000.bin...
+[C++ Engine] ✅ Grid successfully restored! Active Cells: 247587098
+[C++ Engine] Step #6055193383 (6.055 Arab) | Pos: (15062, 265749) | Active Cells: 249784723 | Speed: 4625790 steps/sec
+[C++ Engine] Step #6064371517 (6.064 Arab) | Pos: (18440, 263649) | Active Cells: 250139053 | Speed: 4307613 steps/sec
+[C++ Engine] Step #6100000000 (6.100 Arab) | Pos: (15305, 273185) | Active Cells: 251521038 | Speed: 3978185 steps/sec
+[C++ Engine] Step #6180073065 (6.180 Arab) | Pos: (-21446, 251943) | Active Cells: 254709483 | Speed: 6399847 steps/sec
+[C++ Engine] Step #6200000000 (6.200 Arab) | Pos: (-32773, 257819) | Active Cells: 255519469 | Speed: 5651441 steps/sec
+[C++ Engine] Step #6280772731 (6.281 Arab) | Pos: (-54318, 260377) | Active Cells: 258614101 | Speed: 7313846 steps/sec
+[C++ Engine] Step #6300000000 (6.300 Arab) | Pos: (-32201, 264415) | Active Cells: 259349175 | Speed: 6967263 steps/sec
+[C++ Engine] Step #6379699801 (6.380 Arab) | Pos: (-49782, 265961) | Active Cells: 262334697 | Speed: 8243857 steps/sec
+[C++ Engine] Step #6400000000 (6.400 Arab) | Pos: (-23215, 262353) | Active Cells: 263070976 | Speed: 7918918 steps/sec
+[C++ Engine] Step #6481536343 (6.482 Arab) | Pos: (-67815, 270892) | Active Cells: 266096020 | Speed: 8998669 steps/sec
+[C++ Engine] Step #6500000000 (6.500 Arab) | Pos: (-59357, 276851) | Active Cells: 266840564 | Speed: 8202052 steps/sec
+[C++ Engine] Step #6562996982 (6.563 Arab) | Pos: (-71295, 274683) | Active Cells: 269337374 | Speed: 8802281 steps/sec
+[C++ Engine] Step #6600000000 (6.600 Arab) | Pos: (-66283, 274621) | Active Cells: 270732517 | Speed: 8424634 steps/sec
+[C++ Engine] Step #6676286160 (6.676 Arab) | Pos: (-52545, 251315) | Active Cells: 273616331 | Speed: 9111948 steps/sec
+[C++ Engine] Step #6700000000 (6.700 Arab) | Pos: (-37801, 247983) | Active Cells: 274488805 | Speed: 8591032 steps/sec
+[C++ Engine] Step #6775694209 (6.776 Arab) | Pos: (-47481, 193170) | Active Cells: 277563670 | Speed: 9181952 steps/sec
+[C++ Engine] Step #6800000000 (6.800 Arab) | Pos: (-52697, 205939) | Active Cells: 278547012 | Speed: 8723046 steps/sec
+[C++ Engine] Step #6866823503 (6.867 Arab) | Pos: (-59627, 218306) | Active Cells: 281195994 | Speed: 9152292 steps/sec
+[C++ Engine] Step #6900000000 (6.900 Arab) | Pos: (-59489, 230727) | Active Cells: 282511773 | Speed: 8825962 steps/sec
+[C++ Engine] Step #6961094670 (6.961 Arab) | Pos: (-59515, 229807) | Active Cells: 284906856 | Speed: 9155734 steps/sec
+[C++ Engine] Step #7000000000 (7.000 Arab) | Pos: (-40899, 231085) | Active Cells: 286421654 | Speed: 8526353 steps/sec
+[C++ Engine] Step #7074138215 (7.074 Arab) | Pos: (-64150, 180261) | Active Cells: 289176743 | Speed: 8930059 steps/sec
+[C++ Engine] Step #7100000000 (7.100 Arab) | Pos: (-87069, 159335) | Active Cells: 290109152 | Speed: 8623463 steps/sec
+[C++ Engine] Step #7173822590 (7.174 Arab) | Pos: (-80177, 175177) | Active Cells: 292695086 | Speed: 8990747 steps/sec
+[C++ Engine] Step #7200000000 (7.200 Arab) | Pos: (-69567, 189981) | Active Cells: 293610006 | Speed: 8709364 steps/sec
+[C++ Engine] Step #7278156963 (7.278 Arab) | Pos: (-27873, 177994) | Active Cells: 296530142 | Speed: 9078932 steps/sec
+[C++ Engine] Step #7300000000 (7.300 Arab) | Pos: (-30347, 144933) | Active Cells: 297379587 | Speed: 8782634 steps/sec
+[C++ Engine] Step #7378504851 (7.379 Arab) | Pos: (-25327, 90754) | Active Cells: 300315666 | Speed: 9128000 steps/sec
+[C++ Engine] Step #7394142269 (7.394 Arab) | Pos: (-12958, 85309) | Active Cells: 300947315 | Speed: 9050428 steps/sec
+[C++ Engine] Step #7400000000 (7.400 Arab) | Pos: (-19565, 91235) | Active Cells: 301186146 | Speed: 8568508 steps/sec
+[C++ Engine] Step #7463885258 (7.464 Arab) | Pos: (-27887, 82579) | Active Cells: 303650271 | Speed: 8797969 steps/sec
+[C++ MILESTONE] ⭐ Step #7500000000 (750 Crore / 7.50 Arab) | Pos: (-19205, 87743) | Dir: 2 | Primes: 345826612 | Active Cells: 305013648
+[C++ Engine] Step #7500000000 (7.500 Arab) | Pos: (-19205, 87743) | Active Cells: 305013648 | Speed: 8424109 steps/sec
+[C++ Engine] Step #7577957070 (7.578 Arab) | Pos: (20643, 60345) | Active Cells: 308079884 | Speed: 8715088 steps/sec
+[C++ MILESTONE] ⭐ Step #7600000000 (760 Crore / 7.60 Arab) | Pos: (28901, 62917) | Dir: 1 | Primes: 350221825 | Active Cells: 308951177
+[C++ Engine] Step #7600000000 (7.600 Arab) | Pos: (28901, 62917) | Active Cells: 308951177 | Speed: 8242892 steps/sec
+[C++ Engine] Step #7679650467 (7.680 Arab) | Pos: (23388, 38729) | Active Cells: 312103199 | Speed: 8521532 steps/sec
+[C++ MILESTONE] ⭐ Step #7700000000 (770 Crore / 7.70 Arab) | Pos: (-7673, 35635) | Dir: 0 | Primes: 354615116 | Active Cells: 312926716
+[C++ Engine] Step #7700000000 (7.700 Arab) | Pos: (-7673, 35635) | Active Cells: 312926716 | Speed: 8116165 steps/sec
+[C++ Engine] Step #7777536211 (7.778 Arab) | Pos: (-21527, 53822) | Active Cells: 316061964 | Speed: 8366508 steps/sec
+[C++ MILESTONE] ⭐ Step #7800000000 (780 Crore / 7.80 Arab) | Pos: (-22403, 51057) | Dir: 1 | Primes: 359006517 | Active Cells: 316973289
+[C++ Engine] Step #7800000000 (7.800 Arab) | Pos: (-22403, 51057) | Active Cells: 316973289 | Speed: 8005712 steps/sec
+[C++ Engine] Step #7858200000 (7.858 Arab) | Pos: (-20283, 90869) | Active Cells: 319202241 | Speed: 8155742 steps/sec
+[C++ MILESTONE] ⭐ Step #7900000000 (790 Crore / 7.90 Arab) | Pos: (-33383, 60537) | Dir: 3 | Primes: 363395981 | Active Cells: 320733321
+[C++ Engine] Step #7900000000 (7.900 Arab) | Pos: (-33383, 60537) | Active Cells: 320733321 | Speed: 7746236 steps/sec
+[C++ Engine] Step #7984557744 (7.985 Arab) | Pos: (-24891, 67761) | Active Cells: 324084289 | Speed: 7993211 steps/sec
+[C++ MILESTONE] ⭐ Step #8000000000 (800 Crore / 8.00 Arab) | Pos: (-311, 74121) | Dir: 2 | Primes: 367783654 | Active Cells: 324707280
+[C++ Engine] Step #8000000000 (8.000 Arab) | Pos: (-311, 74121) | Active Cells: 324707280 | Speed: 7750855 steps/sec
+==========================================================
+[C++ Engine] 🎉 REACHED TARGET STEP 8000000000 (8 ARAB) SUCCESSFULLY!
+  Final Step: 8000000000
+  Ant Pos: (-311, 74121)
+  Total Primes Encountered: 367783654
+  Active Cells: 324707280
+  Total Axis Crossings: 11153
+  Max Return Gap: 1976228922 steps (From #3764698239 to #5740927161)
+  Total Simulation Time: 258.036 seconds (7.75085e+06 steps/sec)
+==========================================================
+[C++ Engine] Simulation Batch Complete!
