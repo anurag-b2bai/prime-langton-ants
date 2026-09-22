@@ -1,15 +1,15 @@
 {
-  "stepCount": 8600000000,
-  "primeIndex": 347885049,
-  "ant": {"x": -261143, "y": 354641, "dir": 1},
-  "graphBounds": {"minX": -298205, "maxX": 163395, "minY": -10915, "maxY": 521745},
+  "stepCount": 8500000000,
+  "primeIndex": 389682427,
+  "ant": {"x": -46599, "y": 100369, "dir": 1},
+  "graphBounds": {"minX": -164789, "maxX": 163395, "minY": -10915, "maxY": 318301},
   "isPaused": false,
   "xAxisCrossings": 3335,
-  "yAxisCrossings": 5200,
-  "totalAxisCrossings": 8535,
+  "yAxisCrossings": 11860,
+  "totalAxisCrossings": 15195,
   "maxReturnGap": 1976228922,
   "maxGapStartStep": 3764698239,
   "maxGapEndStep": 5740927161,
-  "activeCellCount": 161446781,
+  "activeCellCount": 343661019,
   "grid": []
 }
