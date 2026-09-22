@@ -1,0 +1,24 @@
+# Ignore large snapshot results and datasets > 100MB
+result/
+dataset/
+backend/dataset/
+*.bin
+*.bmp
+*.log
+*.db
+*.idx
+*.txt
+
+# Binary executables
+fast_ant_engine
+backend/fast_ant_engine
+backend/test_bucket_grid
+backend/test_flat_hash
+backend/test_sieve_engine
+backend/generate_primes
+
+# Python cache & env
+__pycache__/
+*.pyc
+.env
+.pytest_cache/

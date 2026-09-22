@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prime-Based Langton's Ant Simulation 🐜 prime-ant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #030712;
+      --panel-bg: rgba(8, 10, 18, 0.94);
+      --panel-border: rgba(160, 100, 45, 0.3);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-prime: #facc15;
+      --accent-left: #ef4444;
+      --accent-right: #22c55e;
+      --accent-straight: #38bdf8;
+      --gold: #facc15;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #020b06;
+      --panel-bg: rgba(4, 28, 16, 0.8);
+      --panel-border: rgba(0, 255, 102, 0.2);
+      --accent-prime: #00ff66;
+      --accent-left: #00e5ff;
+      --accent-right: #39ff14;
+      --accent-straight: #10b981;
+      --gold: #ccff00;
+    }
+
+    [data-theme="classic"] {
+      --bg: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.85);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --accent-prime: #fbbf24;
+      --accent-left: #f43f5e;
+      --accent-right: #60a5fa;
+      --accent-straight: #34d399;
+      --gold: #f59e0b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: rgba(7, 9, 19, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      z-index: 10;
+    }
+
+    .title-area { display: flex; align-items: center; gap: 12px; }
+    .ant-badge {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--accent-left), var(--accent-prime));
+      border-radius: 12px;
+      padding: 6px 10px;
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+    }
+    h1 {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* ── Main Layout ───────────────────────────────────────── */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      background: #000000;
+      cursor: grab;
+      overflow: hidden;
+    }
+    #canvas-container:active { cursor: grabbing; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    /* ── Sidebar Overlay Panel ──────────────────────────────── */
+    .sidebar {
+      width: 360px;
+      height: 100%;
+      max-height: calc(100vh - 60px);
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      overflow-y: scroll; /* Always scrollable */
+      scroll-behavior: smooth;
+      z-index: 5;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+
+    /* Custom Visible Scrollbar for Sidebar */
+    .sidebar::-webkit-scrollbar {
+      width: 10px;
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 5px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #facc15, #ca8a04);
+      border-radius: 5px;
+      border: 2px solid rgba(0, 0, 0, 0.5);
+    }
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: #fef08a;
+    }
+
+    .card {
+      background: rgba(18, 24, 38, 0.95);
+      border: 1px solid rgba(160, 100, 45, 0.35);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #facc15;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      background: #1e293b;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .btn:hover {
+      background: #334155;
+      border-color: #facc15;
+      color: #facc15;
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: none;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+      color: white;
+    }
+    .btn-full { grid-column: span 2; }
+
+    .slider-group {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+    .slider-val { font-family: 'JetBrains Mono', monospace; color: #facc15; font-weight: 700; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #facc15;
+      cursor: pointer;
+    }
+
+    /* Inputs */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    input[type="number"], select {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      border-radius: 8px;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      outline: none;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: #facc15;
+    }
+
+    /* Stats Grid */
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 10px;
+      padding: 6px 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+    }
+    .stat-box:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .badge-turn {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .turn-left { background: rgba(239, 68, 68, 0.25); color: #ef4444; border: 1px solid #ef4444; }
+    .turn-right { background: rgba(34, 197, 94, 0.25); color: #22c55e; border: 1px solid #22c55e; }
+    .turn-straight { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #64748b; }
+
+    /* Rules Explanation */
+    .rules-list {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+
+    /* Mini Chart */
+    .mini-chart-wrap {
+      width: 100%;
+      height: 120px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(250,204,21,0.15);
+      margin-top: 8px;
+    }
+    .mini-chart-wrap canvas { width: 100%; height: 100%; display: block; }
+
+    /* Direction bars */
+    .dir-bar-wrap { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .dir-bar-row { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
+    .dir-bar-label { width: 24px; text-align: right; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+    .dir-bar-track { flex: 1; height: 10px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+    .dir-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+    .dir-bar-count { min-width: 48px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #cbd5e1; }
+
+    /* Export buttons row */
+    .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .btn-export {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      background: rgba(250, 204, 21, 0.08);
+      color: #facc15;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-export:hover { background: rgba(250,204,21,0.18); border-color: #facc15; }
+    .btn-save { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.08); color: #22c55e; }
+    .btn-save:hover { background: rgba(34,197,94,0.2); border-color: #22c55e; }
+    .btn-load { border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.08); color: #38bdf8; }
+    .btn-load:hover { background: rgba(56,189,248,0.2); border-color: #38bdf8; }
+    .save-status { font-size: 0.72rem; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-top: 6px; text-align: center; }
+
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rules-list span { font-weight: 700; }
+
+    /* Floating Canvas Controls HUD */
+    .canvas-hud {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(8, 10, 18, 0.95);
+      backdrop-filter: blur(12px);
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(250, 204, 21, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      z-index: 10;
+    }
+    .hud-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hud-btn:hover {
+      background: #facc15;
+      color: #000000;
+      border-color: #facc15;
+    }
+
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .toggle-switch input { accent-color: #facc15; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-body { flex-direction: column-reverse; height: auto; }
+      .sidebar { width: 100%; height: 380px; border-left: none; border-top: 1px solid var(--panel-border); }
+    }
+
+    /* ── Locked Settings ── */
+    .setting-locked { opacity: 0.45; pointer-events: none; user-select: none; }
+    .lock-badge {
+      font-size: 0.65rem; background: rgba(239,68,68,0.2); color: #f87171;
+      border: 1px solid rgba(239,68,68,0.3); border-radius: 4px;
+      padding: 2px 6px; margin-left: 6px; font-family: 'JetBrains Mono',monospace;
+    }
+
+    /* ── Experiment Label Input ── */
+    .exp-label-wrap { margin-bottom: 10px; }
+    .exp-label-wrap label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
+    .exp-label-wrap input {
+      width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(250,204,21,0.3);
+      border-radius: 6px; color: #facc15; font-family: 'JetBrains Mono',monospace;
+      font-size: 0.82rem; font-weight: 600; padding: 6px 10px; outline: none;
+    }
+    .exp-label-wrap input:focus { border-color: #facc15; }
+
+    /* ── Report Modal ── */
+    #reportModal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      overflow-y: auto; padding: 24px;
+    }
+    #reportModal.active { display: flex; align-items: flex-start; justify-content: center; }
+    .report-box {
+      background: #0a0f1e; border: 1px solid rgba(250,204,21,0.3);
+      border-radius: 16px; width: 100%; max-width: 800px;
+      box-shadow: 0 0 60px rgba(250,204,21,0.12); padding: 28px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .report-title {
+      font-size: 1.3rem; font-weight: 900; color: #facc15;
+      border-bottom: 1px solid rgba(250,204,21,0.2); padding-bottom: 12px;
+      margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .report-close {
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4);
+      color: #f87171; border-radius: 8px; padding: 6px 14px; cursor: pointer;
+      font-weight: 700; font-size: 0.85rem; transition: all 0.2s;
+    }
+    .report-close:hover { background: rgba(239,68,68,0.3); }
+    .report-section {
+      margin-bottom: 20px; padding: 16px;
+      background: rgba(255,255,255,0.03); border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .report-section-title {
+      font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #64748b; margin-bottom: 12px;
+    }
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .report-stat { display: flex; flex-direction: column; gap: 2px; }
+    .report-stat-label { font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .report-stat-value { font-family: 'JetBrains Mono',monospace; font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+    .report-stat-value.highlight { color: #facc15; }
+    .report-stat-value.green { color: #22c55e; }
+    .report-stat-value.red { color: #ef4444; }
+    .report-stat-value.blue { color: #38bdf8; }
+    .report-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .report-bar-label { width: 20px; font-size: 0.85rem; text-align: center; }
+    .report-bar-track { flex: 1; height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+    .report-bar-fill { height: 100%; border-radius: 6px; }
+    .report-bar-count { min-width: 100px; text-align: right; font-family: 'JetBrains Mono',monospace; font-size: 0.75rem; color: #94a3b8; }
+    .report-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .report-btn {
+      padding: 12px; border-radius: 10px; border: 1px solid rgba(250,204,21,0.3);
+      background: rgba(250,204,21,0.08); color: #facc15; cursor: pointer;
+      font-family: 'Outfit',sans-serif; font-weight: 700; font-size: 0.85rem;
+      transition: all 0.2s; text-align: center;
+    }
+    .report-btn:hover { background: rgba(250,204,21,0.18); }
+    .report-btn.full { grid-column: span 2; }
+    .report-btn.green-btn { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.08); color: #22c55e; }
+    .report-btn.green-btn:hover { background: rgba(34,197,94,0.2); }
+  </style>
+</head>
+<body data-theme="neon">
+
+  <!-- ── Report Modal ────────────────────────────────────────── -->
+  <div id="reportModal">
+    <div class="report-box">
+      <div class="report-title">
+        <span>📋 Run Report: <span id="rptLabel">-</span></span>
+        <button class="report-close" onclick="closeReport()">✕ Close</button>
+      </div>
+
+      <!-- A: Run Summary -->
+      <div class="report-section">
+        <div class="report-section-title">A · Run Summary</div>
+        <div class="report-grid">
+          <div class="report-stat"><div class="report-stat-label">Total Steps</div><div class="report-stat-value highlight" id="rptSteps">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Duration</div><div class="report-stat-value" id="rptDuration">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Avg Throughput</div><div class="report-stat-value" id="rptThroughput">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Color Mode</div><div class="report-stat-value" id="rptColorMode">-</div></div>
+        </div>
+      </div>
+
+      <!-- B: Prime Statistics -->
+      <div class="report-section">
+        <div class="report-section-title">B · Prime Statistics</div>
+        <div class="report-grid">
+          <div class="report-stat"><div class="report-stat-label">Total Primes Hit</div><div class="report-stat-value highlight" id="rptPrimesHit">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">RIGHT Turns</div><div class="report-stat-value green" id="rptRightTurns">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">LEFT Turns</div><div class="report-stat-value red" id="rptLeftTurns">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Right/Left Ratio</div><div class="report-stat-value" id="rptTurnRatio">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Min Prime Gap</div><div class="report-stat-value blue" id="rptMinGap">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Max Prime Gap</div><div class="report-stat-value blue" id="rptMaxGap">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Avg Prime Gap</div><div class="report-stat-value" id="rptAvgGap">-</div></div>
+        </div>
+      </div>
+
+      <!-- C: Spatial Statistics -->
+      <div class="report-section">
+        <div class="report-section-title">C · Spatial Statistics</div>
+        <div class="report-grid">
+          <div class="report-stat"><div class="report-stat-label">Final Position</div><div class="report-stat-value" id="rptFinalPos">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Max Dist from Origin</div><div class="report-stat-value highlight" id="rptMaxDist">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Bounding Box</div><div class="report-stat-value" id="rptBBox">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Highest (min Y)</div><div class="report-stat-value blue" id="rptMaxUp">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Lowest (max Y)</div><div class="report-stat-value blue" id="rptMaxDown">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Leftmost (min X)</div><div class="report-stat-value green" id="rptMaxLeft">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Rightmost (max X)</div><div class="report-stat-value green" id="rptMaxRight">-</div></div>
+        </div>
+      </div>
+
+      <!-- D: Axis Crossings -->
+      <div class="report-section">
+        <div class="report-section-title">D · Axis Crossings</div>
+        <div class="report-grid">
+          <div class="report-stat"><div class="report-stat-label">X-Axis (Y=0) Crossings</div><div class="report-stat-value highlight" id="rptXCross">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Y-Axis (X=0) Crossings</div><div class="report-stat-value blue" id="rptYCross">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Last X-Cross Step</div><div class="report-stat-value" id="rptLastXCross">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Last Y-Cross Step</div><div class="report-stat-value" id="rptLastYCross">-</div></div>
+        </div>
+      </div>
+
+      <!-- E: Cell Statistics -->
+      <div class="report-section">
+        <div class="report-section-title">E · Cell Statistics</div>
+        <div class="report-grid">
+          <div class="report-stat"><div class="report-stat-label">Current Active Cells</div><div class="report-stat-value highlight" id="rptActiveCells">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Peak Active Cells</div><div class="report-stat-value green" id="rptPeakCells">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Peak at Step</div><div class="report-stat-value" id="rptPeakStep">-</div></div>
+          <div class="report-stat"><div class="report-stat-label">Total Cell Visits</div><div class="report-stat-value" id="rptTotalVisits">-</div></div>
+        </div>
+      </div>
+
+      <!-- F: Direction Frequency -->
+      <div class="report-section">
+        <div class="report-section-title">F · Direction Frequency at Primes</div>
+        <div id="rptDirBars"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="report-actions">
+        <button class="report-btn green-btn" onclick="screenshotCanvas()">📸 Screenshot Canvas</button>
+        <button class="report-btn green-btn" onclick="screenshotWithStats()">📸 Screenshot + Stats</button>
+        <button class="report-btn" onclick="exportCSV()">📊 Export Prime Events CSV</button>
+        <button class="report-btn" onclick="exportGrowthCSV()">📈 Export Growth CSV</button>
+        <button class="report-btn full" onclick="exportJSON()">🗄️ Export Full JSON Snapshot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screenshot floating HUD button (always visible on canvas) -->
+  <style>#screenshotHud { position: absolute; top: 8px; right: 8px; z-index: 20; }</style>
+
+  <header>
+    <div class="title-area">
+      <div class="ant-badge">🐜</div>
+      <div>
+        <h1>Prime-Based Langton's Ant</h1>
+        <div class="subtitle">CELLULAR AUTOMATON × PRIME GAP JUMP ENGINE</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="hud-btn" href="prime_langton_ant.html" style="background: var(--gold); color: #000; border-color: var(--gold); font-weight: 800; text-decoration: none;">📄 2D Flat Graph</a>
+      <a class="hud-btn" href="prime_langton_ant_sphere.html" style="background: rgba(37,99,235,0.8); color: #fff; border-color: #3b82f6; font-weight: 800; text-decoration: none;">🌐 3D Sphere Globe</a>
+      <select id="themeSelect" onchange="changeTheme(this.value)">
+        <option value="neon">⚡ Cyberpunk Neon</option>
+        <option value="matrix">🟢 Emerald Matrix</option>
+        <option value="classic">🌙 Classic Slate</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <div id="canvas-container">
+      <canvas id="antCanvas"></canvas>
+
+      <!-- HUD overlay -->
+      <div class="canvas-hud">
+        <button class="hud-btn" onclick="zoomIn()" title="Zoom In">🔍+</button>
+        <button class="hud-btn" onclick="zoomOut()" title="Zoom Out">🔍-</button>
+        <button class="hud-btn" onclick="centerAnt()" title="Center on Ant">🎯 Ant</button>
+        <button class="hud-btn" onclick="fitGraphToView()" title="Fit Entire Graph Pixel-to-Pixel">📐 Fit All</button>
+        <button class="hud-btn" onclick="resetView()" title="Reset View">🔄 View</button>
+        <button class="hud-btn" onclick="screenshotCanvas()" title="Screenshot Canvas (PNG)">📸</button>
+        <span style="padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #f59e0b; background: rgba(0,0,0,0.3); border-radius: 6px; min-width: 60px; text-align:center;" id="zoomLevelHud">×14.0</span>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <!-- Control Deck -->
+      <div class="card">
+        <div class="card-title">🎮 Simulation Controls</div>
+
+        <!-- Experiment Label (locked during run) -->
+        <div class="exp-label-wrap" id="expLabelWrap">
+          <label>🔬 Experiment Label</label>
+          <input type="text" id="experimentLabel" placeholder="e.g. Run #1 - VIBGYOR 500M steps" value="Run #1"/>
+        </div>
+
+        <div class="controls-grid">
+          <button id="btnPlay" class="btn btn-primary btn-full" onclick="togglePlay()">
+            <span id="playIcon">▶</span> <span id="playText">Start Simulation</span>
+          </button>
+          <button id="btnStepOnce" class="btn" onclick="stepOnce()">Step (N+1)</button>
+          <button id="btnPrimeJump" class="btn" onclick="stepPrimeJump()">Prime Jump ⏩</button>
+          <button class="btn btn-full" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3);" onclick="resetSim()">
+            🔄 Reset Grid
+          </button>
+        </div>
+
+        <!-- Lockable settings -->
+        <div id="lockableSettings">
+
+          <div class="slider-group" style="margin-top: 10px;">
+            <div class="slider-header">
+              <span>Color Palette Mode <span class="lock-badge" id="colorLockBadge" style="display:none">🔒 LOCKED</span></span>
+            </div>
+            <select id="colorSchemeSelect2D" onchange="changeColorScheme2D(this.value)">
+              <option value="classic_bw">⚪ Classic White Cells (Black Bg)</option>
+              <option value="rainbow_7">🌈 Sat Rango Mode (7 VIBGYOR Colors)</option>
+              <option value="electric_blue">🟦 Electric Blue Theme</option>
+            </select>
+          </div>
+
+          <div class="toggle-switch">
+            <span>Camera Auto-Follow</span>
+            <input type="checkbox" id="autoFollowCheck" checked/>
+          </div>
+
+          <div class="toggle-switch">
+            <span>Blank Space Blue Background</span>
+            <input type="checkbox" id="blankBlueCheck2D" onchange="toggleBlankBlue2D(this.checked)"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prime Macro Engine -->
+      <div class="card">
+        <div class="card-title">🚀 Fast Forward / Jump Engine</div>
+        <div class="input-row">
+          <input type="number" id="jumpTargetInput" placeholder="Target Step (e.g. 100000)" value="10000"/>
+          <button class="btn btn-primary" onclick="jumpToTarget()">Jump</button>
+        </div>
+      </div>
+
+      <!-- Realtime Analytics -->
+      <div class="card">
+        <div class="card-title">📊 Real-Time Analytics</div>
+        
+        <div class="stat-box">
+          <div class="stat-label">CURRENT STEP (N)</div>
+          <div class="stat-value" id="statStep" style="color: var(--accent-prime);">1</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">TURN DECISION</div>
+          <div id="statTurnBadge" class="badge-turn turn-straight">STRAIGHT (Composite)</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">ANT POSITION & HEADING</div>
+          <div class="stat-value" id="statPos">(0, 0) ↑ UP</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">PRIME NEIGHBORHOOD</div>
+          <div class="stat-value" id="statPrimeInfo" style="font-size: 0.9rem;">Last: - | Next: 2 (Gap: 1)</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">ACTIVE BLACK CELLS</div>
+          <div class="stat-value" id="statActiveCells">0 cells</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">PERFORMANCE / FPS</div>
+          <div class="stat-value" id="statFps" style="font-size: 0.85rem; color: var(--gold);">0 FPS | 0 steps/s</div>
+        </div>
+      </div>
+
+      <!-- Axis Crossings Analytics -->
+      <div class="card">
+        <div class="card-title">🎯 Axis Intersections Tracker</div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="stat-box" style="border-left: 3px solid #facc15;">
+            <div class="stat-label" style="color: #facc15;">↔ X-AXIS (Y=0)</div>
+            <div class="stat-value" id="statXCross" style="color: #facc15; font-size: 1rem;">0</div>
+          </div>
+          <div class="stat-box" style="border-left: 3px solid #38bdf8;">
+            <div class="stat-label" style="color: #38bdf8;">↕ Y-AXIS (X=0)</div>
+            <div class="stat-value" id="statYCross" style="color: #38bdf8; font-size: 1rem;">0</div>
+          </div>
+        </div>
+
+        <div class="stat-box" style="margin-top: 8px;">
+          <div class="stat-label">TOTAL AXIS CROSSINGS</div>
+          <div class="stat-value" id="statTotalCross" style="font-size: 1rem; color: #34d399;">0 times</div>
+        </div>
+      </div>
+
+      <!-- Graph Extremes & Pixel Coordinates -->
+      <div class="card">
+        <div class="card-title">📐 Graph Extremes (Pixel to Pixel)</div>
+        
+        <div class="stat-box" style="border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.08);">
+          <div class="stat-label" style="color: #f59e0b;">✨ STARTING POINT (CENTER ORIGIN)</div>
+          <div class="stat-value" style="color: #fbbf24; font-weight: 700;">(0, 0)</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <div class="stat-box">
+            <div class="stat-label">⬆ HIGHEST (TOP)</div>
+            <div class="stat-value" id="statMaxUp" style="font-size: 0.95rem; color: #60a5fa;">Y = 0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">⬇ LOWEST (BOTTOM)</div>
+            <div class="stat-value" id="statMaxDown" style="font-size: 0.95rem; color: #60a5fa;">Y = 0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">⬅ LEFTMOST</div>
+            <div class="stat-value" id="statMaxLeft" style="font-size: 0.95rem; color: #34d399;">X = 0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">➡ RIGHTMOST</div>
+            <div class="stat-value" id="statMaxRight" style="font-size: 0.95rem; color: #34d399;">X = 0</div>
+          </div>
+        </div>
+
+        <div class="stat-box" style="margin-top: 8px;">
+          <div class="stat-label">GRAPH BOUNDING BOX / PIXEL SPAN</div>
+          <div class="stat-value" id="statDimensions" style="font-size: 0.9rem; color: #a78bfa;">1 × 1 px</div>
+        </div>
+
+        <button class="btn btn-primary btn-full" style="margin-top: 10px; background: linear-gradient(135deg, #06b6d4, #3b82f6);" onclick="fitGraphToView()">
+          📐 Fit All Graph (Pixel-to-Pixel)
+        </button>
+      </div>
+
+      <!-- Logic Explanation -->
+      <div class="card">
+        <div class="card-title">📜 Black &amp; White Segment Rules</div>
+        <div class="rules-list">
+          <div>• <span>Segment P1 → P2:</span> Ant goes straight. If P1 was <span style="color:#ffffff">BLACK</span>, segment becomes <span style="color:#ffffff">WHITE</span>. If P1 was <span style="color:#ffffff">WHITE</span>, segment becomes <span style="color:#888888">BLACK</span>.</div>
+          <div>• <span style="color:#22c55e">■ 1st Twin / Isolated Prime:</span> Turn <span style="color:#22c55e">RIGHT (90° ↻)</span> at P2.</div>
+          <div>• <span style="color:#ef4444">■ 2nd Twin Prime (N &amp; N-2 Prime):</span> Turn <span style="color:#ef4444">LEFT (90° ↺)</span> at P2.</div>
+          <div>• <span style="color:#facc15">★ Source Origin (0,0):</span> <span style="color:#facc15">Bright Yellow Beacon</span>.</div>
+        </div>
+      </div>
+
+      <!-- Growth Stats Chart -->
+      <div class="card">
+        <div class="card-title">📈 Growth Stats (Active Cells vs Step)</div>
+        <div class="mini-chart-wrap">
+          <canvas id="growthChart" width="320" height="120"></canvas>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:0.68rem; color:#64748b; font-family:'JetBrains Mono',monospace;">
+          <span id="chartMinStep">0</span>
+          <span style="color:#facc15;">Active Cells Over Time</span>
+          <span id="chartMaxStep">-</span>
+        </div>
+      </div>
+
+      <!-- Direction Frequency -->
+      <div class="card">
+        <div class="card-title">🧭 Turn Frequency at Primes</div>
+        <div class="dir-bar-wrap">
+          <div class="dir-bar-row">
+            <div class="dir-bar-label">↑</div>
+            <div class="dir-bar-track"><div class="dir-bar-fill" id="dirBarUp" style="width:0%;background:#60a5fa;"></div></div>
+            <div class="dir-bar-count" id="dirCntUp">0</div>
+          </div>
+          <div class="dir-bar-row">
+            <div class="dir-bar-label">→</div>
+            <div class="dir-bar-track"><div class="dir-bar-fill" id="dirBarRight" style="width:0%;background:#22c55e;"></div></div>
+            <div class="dir-bar-count" id="dirCntRight">0</div>
+          </div>
+          <div class="dir-bar-row">
+            <div class="dir-bar-label">↓</div>
+            <div class="dir-bar-track"><div class="dir-bar-fill" id="dirBarDown" style="width:0%;background:#f87171;"></div></div>
+            <div class="dir-bar-count" id="dirCntDown">0</div>
+          </div>
+          <div class="dir-bar-row">
+            <div class="dir-bar-label">←</div>
+            <div class="dir-bar-track"><div class="dir-bar-fill" id="dirBarLeft" style="width:0%;background:#a78bfa;"></div></div>
+            <div class="dir-bar-count" id="dirCntLeft">0</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <div class="stat-box" style="border-left:3px solid #22c55e;">
+            <div class="stat-label" style="color:#22c55e;">RIGHT TURNS</div>
+            <div class="stat-value" id="totalRightTurns" style="color:#22c55e;font-size:0.95rem;">0</div>
+          </div>
+          <div class="stat-box" style="border-left:3px solid #ef4444;">
+            <div class="stat-label" style="color:#ef4444;">LEFT TURNS</div>
+            <div class="stat-value" id="totalLeftTurns" style="color:#ef4444;font-size:0.95rem;">0</div>
+          </div>
+        </div>
+        <div class="stat-box" style="margin-top:6px;">
+          <div class="stat-label">RIGHT/LEFT RATIO</div>
+          <div class="stat-value" id="turnRatio" style="font-size:0.9rem;color:#facc15;">-</div>
+        </div>
+      </div>
+
+      <!-- Axis Crossing Log -->
+      <div class="card">
+        <div class="card-title">🚦 Axis Crossing Log</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div class="stat-box" style="border-left:3px solid #facc15;">
+            <div class="stat-label" style="color:#facc15;">X-AXIS (Y=0) HITS</div>
+            <div class="stat-value" id="axisLogXCount" style="color:#facc15;font-size:0.95rem;">0</div>
+          </div>
+          <div class="stat-box" style="border-left:3px solid #38bdf8;">
+            <div class="stat-label" style="color:#38bdf8;">Y-AXIS (X=0) HITS</div>
+            <div class="stat-value" id="axisLogYCount" style="color:#38bdf8;font-size:0.95rem;">0</div>
+          </div>
+        </div>
+        <div class="stat-box" style="margin-top:6px;">
+          <div class="stat-label">LAST X-AXIS CROSSING (Step Range)</div>
+          <div class="stat-value" id="lastXCross" style="font-size:0.82rem;color:#facc15;">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">LAST Y-AXIS CROSSING (Step Range)</div>
+          <div class="stat-value" id="lastYCross" style="font-size:0.82rem;color:#38bdf8;">-</div>
+        </div>
+      </div>
+
+      <!-- Data Export & Save -->
+      <div class="card">
+        <div class="card-title">💾 Data Export &amp; Save</div>
+        <div class="export-grid">
+          <button class="btn-export btn-save" onclick="saveCheckpoint()">💾 Save State</button>
+          <button class="btn-export btn-load" onclick="loadCheckpoint()">📂 Load State</button>
+          <button class="btn-export" onclick="exportCSV()">📊 Prime CSV</button>
+          <button class="btn-export" onclick="exportJSON()">🗄️ JSON Snap</button>
+          <button class="btn-export" onclick="exportGrowthCSV()" style="grid-column:span 2;">📈 Growth Stats CSV</button>
+        </div>
+        <div class="save-status" id="saveStatus">No checkpoint saved yet</div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    /* ── State & Storage ─────────────────────────────────────── */
+    // Color Scheme System
+    // Grid stores visit count per cell (1,2,3...)
+    // Odd visit = cell is LIT (visible color), Even visit = cell is OFF (black)
+    let currentColorScheme = 'classic_bw'; // 'classic_bw' | 'rainbow_7' | 'electric_blue'
+
+    const COLOR_SCHEMES = {
+      classic_bw:    { colors: ['#ffffff'], label: 'Classic B&W' },
+      rainbow_7:     { colors: ['#EE82EE','#4B0082','#0000FF','#008000','#FFFF00','#FF7F00','#FF0000'], label: 'VIBGYOR' },
+      electric_blue: { colors: ['#00cfff','#0080ff','#004ccc','#00ffff','#38bdf8'], label: 'Electric Blue' },
+    };
+
+    function changeColorScheme2D(scheme) {
+      currentColorScheme = scheme;
+      render(true);
+    }
+
+    // Get color for a given visit count in current scheme
+    function getCellColor(visitCount) {
+      const scheme = COLOR_SCHEMES[currentColorScheme] || COLOR_SCHEMES.classic_bw;
+      const idx = (visitCount - 1) % scheme.colors.length;
+      return scheme.colors[idx];
+    }
+
+    let grid = new Map(); // Key: "x,y", Value: visit count (1,2,3...); odd=lit, even=off
+    let ant = { x: 0, y: 0, dir: 0 }; // 0=Up, 1=Right, 2=Down, 3=Left
+    let stepCount = 1;
+
+    // Graph Extremes (Bounding Box)
+    let graphBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+
+    // 0-Line Axis Intersections Tracking (Y=0 and X=0 lines)
+    let xAxisCrossings = 0; // Number of times path crossed Y = 0 (Horizontal 0 Line)
+    let yAxisCrossings = 0; // Number of times path crossed X = 0 (Vertical 0 Line)
+
+    // ── Data Analytics State ──────────────────────────────────
+    // Growth stats: sampled every GROWTH_SAMPLE_INTERVAL steps
+    const GROWTH_SAMPLE_INTERVAL = 1_000_000; // 1M steps per sample
+    let growthSamples = []; // [{step, cells}]
+    let nextGrowthSample = GROWTH_SAMPLE_INTERVAL;
+
+    // Direction frequency: how many times ant is heading each dir at a prime turn
+    let dirFreq = [0, 0, 0, 0]; // [Up, Right, Down, Left]
+    let totalRightTurns = 0;
+    let totalLeftTurns = 0;
+
+    // Prime events CSV buffer (last 500K events max to avoid memory overflow)
+    const MAX_PRIME_EVENTS = 500_000;
+    let primeEvents = []; // {step, x, y, dir_before, dir_after, prime_type, color_before, color_after}
+
+    // Axis crossing log
+    let axisCrossLog = { x: [], y: [] }; // arrays of {stepFrom, stepTo}
+    let lastCrossStepX = null;
+    let lastCrossStepY = null;
+
+    // Auto-save interval
+    const AUTO_SAVE_INTERVAL = 10_000_000; // 10M steps
+    let nextAutoSave = AUTO_SAVE_INTERVAL;
+
+    // ── Research Run State ────────────────────────────────────
+    let simState = 'idle'; // 'idle' | 'running' | 'stopped'
+    let runStartTime = null;
+    let runEndTime = null;
+    let runStartStep = 0;
+    let peakActiveCells = 0;
+    let peakActiveCellsStep = 0;
+    let totalCellVisits = 0;
+    let minPrimeGap = Infinity;
+    let maxPrimeGap = 0;
+    let sumPrimeGaps = 0;
+    let gapCount = 0;
+    let lastPrimeStep = null; // for gap computation
+    let runNumber = 1;
+
+    function trackBounds(x, y) {
+      if (x < graphBounds.minX) graphBounds.minX = x;
+      if (x > graphBounds.maxX) graphBounds.maxX = x;
+      if (y < graphBounds.minY) graphBounds.minY = y;
+      if (y > graphBounds.maxY) graphBounds.maxY = y;
+    }
+
+    function trackSegmentAxisCrossings(xStart, yStart, dir, gap) {
+      if (gap <= 0) return;
+      const xEnd = xStart + dx[dir] * gap;
+      const yEnd = yStart + dy[dir] * gap;
+
+      if (dir === 1 || dir === 3) {
+        // Horizontal segment (Y is constant = yStart)
+        if (yStart === 0) xAxisCrossings += gap; // Traveling along Y=0 line
+        const minX = Math.min(xStart, xEnd);
+        const maxX = Math.max(xStart, xEnd);
+        if (minX <= 0 && maxX >= 0) yAxisCrossings++; // Crosses X=0 line
+      } else {
+        // Vertical segment (X is constant = xStart)
+        if (xStart === 0) yAxisCrossings += gap; // Traveling along X=0 line
+        const minY = Math.min(yStart, yEnd);
+        const maxY = Math.max(yStart, yEnd);
+        if (minY <= 0 && maxY >= 0) xAxisCrossings++; // Crosses Y=0 line
+      }
+    }
+
+    function recalculateBounds() {
+      graphBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+      trackBounds(ant.x, ant.y);
+      for (const key of grid.keys()) {
+        const comma = key.indexOf(',');
+        const x = parseInt(key.substring(0, comma), 10);
+        const y = parseInt(key.substring(comma + 1), 10);
+        trackBounds(x, y);
+      }
+    }
+
+    // Viewport Camera State
+    let zoom = 14; // pixels per cell
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+
+    // Simulation Loop State
+    let isRunning = false;
+    let stepsPerFrame = 5000;
+    let animationFrameId = null;
+
+    // Performance Stats
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let totalStepsThisSecond = 0;
+    let currentFps = 0;
+    let currentSps = 0;
+
+    // Heading Vectors
+    const dx = [0, 1, 0, -1];
+    const dy = [-1, 0, 1, 0]; // Canvas Y is inverted
+    const dirSymbols = ['↑ UP', '→ RIGHT', '↓ DOWN', '← LEFT'];
+
+    /* ── IndexedDB + LocalStorage Persistence ───────────────── */
+    const LS_KEY = 'prime_ant_state_v1';
+    const DB_NAME = 'PrimeAntDB';
+    const STORE_NAME = 'state';
+    let isStateLoaded = false;
+
+    function getDB() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) { resolve(null); return; }
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          e.target.result.createObjectStore(STORE_NAME);
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = () => resolve(null);
+      });
+    }
+
+    function saveStateSync() {
+      if (!isStateLoaded) return; // Prevent overwriting with uninitialized state
+      try {
+        const gridArr = Array.from(grid.entries());
+        const stateObj = {
+          grid: gridArr,
+          ant, stepCount,
+          zoom, panX, panY,
+          graphBounds,
+          xAxisCrossings, yAxisCrossings
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(stateObj));
+      } catch (e) {
+        console.warn('Sync save skipped:', e.message);
+      }
+    }
+
+    async function saveState() {
+      if (!isStateLoaded) return; // Prevent overwriting with uninitialized state
+      try {
+        const gridArr = Array.from(grid.entries());
+        const stateObj = {
+          grid: gridArr,
+          ant, stepCount,
+          zoom, panX, panY,
+          graphBounds,
+          xAxisCrossings, yAxisCrossings
+        };
+
+        // Synchronous localStorage save (guaranteed fast)
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify(stateObj));
+        } catch (e) {}
+
+        // Async IndexedDB save (unlimited capacity)
+        const db = await getDB();
+        if (db) {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(stateObj, 'currentState');
+        }
+      } catch (e) {
+        console.warn('State save skipped:', e.message);
+      }
+    }
+
+    function applyLoadedState(s) {
+      grid = new Map(s.grid);
+      ant = s.ant;
+      stepCount = s.stepCount;
+      zoom = s.zoom || zoom;
+      panX = s.panX || 0;
+      panY = s.panY || 0;
+      if (s.graphBounds) graphBounds = s.graphBounds;
+      else recalculateBounds();
+      if (s.xAxisCrossings !== undefined) xAxisCrossings = s.xAxisCrossings;
+      if (s.yAxisCrossings !== undefined) yAxisCrossings = s.yAxisCrossings;
+    }
+
+    function loadStateSync() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (s && s.grid && s.stepCount) {
+          applyLoadedState(s);
+          return true;
+        }
+      } catch (e) {
+        console.warn('Sync load failed:', e.message);
+      }
+      return false;
+    }
+
+    async function fetchServerCheckpoint() {
+      try {
+        const res = await fetch('/api/checkpoint');
+        if (res.ok) {
+          const apiObj = await res.json();
+          if (apiObj && apiObj.stepCount && apiObj.grid) {
+            return apiObj;
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    async function loadState() {
+      let loadedState = await fetchServerCheckpoint();
+
+      if (!loadedState) {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) {
+            const lsObj = JSON.parse(raw);
+            if (lsObj && lsObj.stepCount && lsObj.grid) {
+              loadedState = lsObj;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (loadedState) {
+        applyLoadedState(loadedState);
+        isStateLoaded = true;
+        console.log(`✅ Restored state: Step ${stepCount.toLocaleString()}, ${grid.size.toLocaleString()} active cells`);
+        setTimeout(fitGraphToView, 100);
+        return true;
+      }
+
+      isStateLoaded = true;
+      return false;
+    }
+
+    // Periodic live sync with C++ server checkpoint every 3 seconds
+    setInterval(async () => {
+      const serverState = await fetchServerCheckpoint();
+      if (serverState && serverState.stepCount > stepCount) {
+        applyLoadedState(serverState);
+        updateUI();
+        render();
+      }
+    }, 3000);
+
+    // Auto-save every 2 seconds
+    setInterval(saveState, 2000);
+
+    // Save synchronously on page unload/refresh so data is NEVER lost
+    window.addEventListener('beforeunload', () => {
+      if (isStateLoaded) {
+        saveStateSync();
+      }
+    });
+
+    /* ── Canvas Setup ────────────────────────────────────────── */
+    const container = document.getElementById('canvas-container');
+    const canvas = document.getElementById('antCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      render();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ── Fast Primality & Twin Prime Test ────────────────────── */
+    function isPrime(n) {
+      if (n <= 1) return false;
+      if (n <= 3) return true;
+      if (n % 2 === 0 || n % 3 === 0) return false;
+      for (let i = 5; i * i <= n; i += 6) {
+        if (n % i === 0 || n % (i + 2) === 0) return false;
+      }
+      return true;
+    }
+
+    function getPrimeType(n) {
+      if (!isPrime(n)) return 'COMPOSITE';
+      if (isPrime(n - 2)) return 'TWIN_SECOND'; // Larger of twin pair (turn Left)
+      return 'TWIN_FIRST_OR_ISOLATED'; // First of twin pair or isolated (turn Right)
+    }
+
+    function getNextPrime(n) {
+      if (n < 2) return 2;
+      let candidate = (n % 2 === 0) ? n + 1 : n + 2;
+      while (!isPrime(candidate)) candidate += 2;
+      return candidate;
+    }
+
+    function getPrevPrime(n) {
+      if (n <= 2) return null;
+      let candidate = (n % 2 === 0) ? n - 1 : n - 2;
+      while (candidate >= 2 && !isPrime(candidate)) candidate -= 2;
+      return candidate >= 2 ? candidate : null;
+    }
+
+    /* ── Simulation Engine: Color Flips ONLY at Turning Points (Primes) ── */
+    function performSingleStep() {
+      const key = `${ant.x},${ant.y}`;
+      const pType = getPrimeType(stepCount);
+
+      // Color changes ONLY at turning points (Primes)!
+      if (pType === 'TWIN_SECOND' || pType === 'TWIN_FIRST_OR_ISOLATED') {
+        const curVisit = grid.get(key) || 0;
+        const newVisit = curVisit + 1;
+        if (newVisit % 2 === 0) {
+          grid.delete(key); // Even visit = off (back to black)
+        } else {
+          grid.set(key, newVisit); // Odd visit = lit
+        }
+      }
+
+      // Turn decision at Prime
+      if (pType === 'TWIN_SECOND') {
+        ant.dir = (ant.dir + 3) % 4; // Turn LEFT 90° (2nd Twin Prime)
+      } else if (pType === 'TWIN_FIRST_OR_ISOLATED') {
+        ant.dir = (ant.dir + 1) % 4; // Turn RIGHT 90° (1st Twin / Isolated Prime)
+      }
+
+      // Move Forward 1 unit
+      ant.x += dx[ant.dir];
+      ant.y += dy[ant.dir];
+
+      trackBounds(ant.x, ant.y);
+      stepCount++;
+    }
+
+    function performPrimeSegment(p1, p2) {
+      const gap = p2 - p1;
+
+      // Composite steps between p1 and p2: Ant walks straight, NO color change!
+      trackSegmentAxisCrossings(ant.x, ant.y, ant.dir, gap);
+
+      // Move ant straight to p2
+      ant.x += dx[ant.dir] * gap;
+      ant.y += dy[ant.dir] * gap;
+      stepCount = p2;
+      trackBounds(ant.x, ant.y);
+
+      // At prime endpoint p2: TURNING POINT! Color changes & ant turns!
+      const key = `${ant.x},${ant.y}`;
+      const pType = getPrimeType(stepCount);
+
+      if (pType === 'TWIN_SECOND' || pType === 'TWIN_FIRST_OR_ISOLATED') {
+        const curColor = grid.get(key) || 0;
+        if (curColor === 1) grid.delete(key);
+        else grid.set(key, 1);
+      }
+
+      if (pType === 'TWIN_SECOND') {
+        ant.dir = (ant.dir + 3) % 4; // Turn LEFT 90° (2nd Twin Prime)
+      } else if (pType === 'TWIN_FIRST_OR_ISOLATED') {
+        ant.dir = (ant.dir + 1) % 4; // Turn RIGHT 90° (1st Twin / Isolated Prime)
+      }
+    }
+
+    function stepPrimeJump() {
+      const nextP = getNextPrime(stepCount);
+      performPrimeSegment(stepCount, nextP);
+      updateUI();
+      render(true);
+    }
+
+    function jumpToTarget() {
+      const targetInput = document.getElementById('jumpTargetInput');
+      const target = parseInt(targetInput.value, 10);
+      if (isNaN(target) || target <= stepCount) return;
+
+      const wasRunning = isRunning;
+      if (isRunning) togglePlay();
+
+      const batchLimit = 200000;
+
+      function processMacroChunk() {
+        const chunkTarget = Math.min(target, stepCount + batchLimit);
+        while (stepCount < chunkTarget) {
+          const nextP = getNextPrime(stepCount);
+          if (nextP > chunkTarget) {
+            const dist = chunkTarget - stepCount;
+            ant.x += dx[ant.dir] * dist;
+            ant.y += dy[ant.dir] * dist;
+            stepCount = chunkTarget;
+            trackBounds(ant.x, ant.y);
+            break;
+          }
+          performPrimeSegment(stepCount, nextP);
+        }
+
+        updateUI();
+        render(true);
+
+        if (stepCount < target) {
+          setTimeout(processMacroChunk, 0);
+        } else if (wasRunning) {
+          togglePlay();
+        }
+      }
+
+      processMacroChunk();
+    }
+
+    /* ── Rendering Engine ──────────────────────────────────────── */
+    function renderCore() {
+      // Space Black background always
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2 + panX;
+      const centerY = canvas.height / 2 + panY;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+
+      // Culling Bounding Box calculation
+      const minVisibleX = Math.floor((-centerX) / zoom) - 2;
+      const maxVisibleX = Math.ceil((canvas.width - centerX) / zoom) + 2;
+      const minVisibleY = Math.floor((-centerY) / zoom) - 2;
+      const maxVisibleY = Math.ceil((canvas.height - centerY) / zoom) + 2;
+
+      // Draw Grid Lines when zoomed in (light brown lines, invisible when scaled down)
+      if (zoom >= 8) {
+        ctx.strokeStyle = 'rgba(160, 100, 45, 0.18)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        for (let x = minVisibleX; x <= maxVisibleX; x++) {
+          ctx.moveTo(x * zoom, minVisibleY * zoom);
+          ctx.lineTo(x * zoom, maxVisibleY * zoom);
+        }
+        for (let y = minVisibleY; y <= maxVisibleY; y++) {
+          ctx.moveTo(minVisibleX * zoom, y * zoom);
+          ctx.lineTo(maxVisibleX * zoom, y * zoom);
+        }
+        ctx.stroke();
+      }
+
+      // ─ Draw 0-Lines (Center Axes: Y = 0 and X = 0) ─
+      ctx.lineWidth = Math.max(1, 1 / zoom);
+
+      // Y = 0 Horizontal Line (X-Axis - Gold)
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.5)';
+      ctx.setLineDash([4 / zoom, 4 / zoom]);
+      ctx.beginPath();
+      ctx.moveTo(minVisibleX * zoom, 0);
+      ctx.lineTo(maxVisibleX * zoom, 0);
+      ctx.stroke();
+
+      // X = 0 Vertical Line (Y-Axis - Cyan)
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.beginPath();
+      ctx.moveTo(0, minVisibleY * zoom);
+      ctx.lineTo(0, maxVisibleY * zoom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw Cells using current color scheme
+      // Group coords by color string for batch drawing
+      const colorGroups = new Map(); // color string -> [cx, cy, ...]
+
+      const visWidth = maxVisibleX - minVisibleX;
+      const visHeight = maxVisibleY - minVisibleY;
+      const visArea = visWidth * visHeight;
+
+      if (visArea < grid.size && visArea > 0 && visWidth > 0 && visHeight > 0) {
+        for (let x = minVisibleX; x <= maxVisibleX; x++) {
+          for (let y = minVisibleY; y <= maxVisibleY; y++) {
+            const key = x + ',' + y;
+            const visitCount = grid.get(key);
+            if (visitCount) {
+              const col = getCellColor(visitCount);
+              if (!colorGroups.has(col)) colorGroups.set(col, []);
+              colorGroups.get(col).push(x, y);
+            }
+          }
+        }
+      } else {
+        for (const [key, visitCount] of grid.entries()) {
+          const comma = key.indexOf(',');
+          const cx = parseInt(key.substring(0, comma), 10);
+          const cy = parseInt(key.substring(comma + 1), 10);
+          if (cx >= minVisibleX && cx <= maxVisibleX && cy >= minVisibleY && cy <= maxVisibleY) {
+            const col = getCellColor(visitCount);
+            if (!colorGroups.has(col)) colorGroups.set(col, []);
+            colorGroups.get(col).push(cx, cy);
+          }
+        }
+      }
+
+      for (const [color, coords] of colorGroups) {
+        ctx.fillStyle = color;
+        for (let i = 0; i < coords.length; i += 2) {
+          const cx = coords[i], cy = coords[i + 1];
+          if (zoom <= 3) {
+            ctx.fillRect(cx * zoom, cy * zoom, Math.max(1, zoom), Math.max(1, zoom));
+          } else {
+            const pad = Math.max(1, zoom * 0.06);
+            ctx.fillRect(cx * zoom + pad, cy * zoom + pad, zoom - pad * 2, zoom - pad * 2);
+          }
+        }
+      }
+
+      // ─ Yellow Source Beacon (always bright yellow at 0,0) ─
+      const ox = zoom / 2;
+      const oy = zoom / 2;
+      const beaconR = Math.max(4, zoom * 0.4);
+      // Outer yellow glow rings
+      for (let r = 3; r >= 1; r--) {
+        ctx.beginPath();
+        ctx.arc(ox, oy, beaconR * r * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(250, 204, 21, ${0.12 / r})`;
+        ctx.shadowBlur = 0;
+        ctx.fill();
+      }
+      // Yellow Core dot
+      ctx.beginPath();
+      ctx.arc(ox, oy, beaconR, 0, Math.PI * 2);
+      const beaconGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, beaconR);
+      beaconGrad.addColorStop(0, '#ffffdd');
+      beaconGrad.addColorStop(0.4, '#facc15');
+      beaconGrad.addColorStop(1, '#ca8a04');
+      ctx.fillStyle = beaconGrad;
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = 24;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Crosshair lines on yellow beacon
+      if (zoom >= 6) {
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - beaconR * 2.2); ctx.lineTo(ox, oy + beaconR * 2.2);
+        ctx.moveTo(ox - beaconR * 2.2, oy); ctx.lineTo(ox + beaconR * 2.2, oy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw Ant — Bright Yellow Beacon like the source
+      const antPx = ant.x * zoom + zoom / 2;
+      const antPy = ant.y * zoom + zoom / 2;
+
+      ctx.save();
+      ctx.translate(antPx, antPy);
+
+      const antR = Math.max(5, zoom * 0.5);
+
+      // Outer pulsing yellow glow rings (same as source beacon)
+      for (let r = 4; r >= 1; r--) {
+        ctx.beginPath();
+        ctx.arc(0, 0, antR * r * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(250, 204, 21, ${0.10 / r})`;
+        ctx.shadowBlur = 0;
+        ctx.fill();
+      }
+
+      // Bright yellow core radial gradient
+      const antGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, antR);
+      antGrad.addColorStop(0, '#ffffff');
+      antGrad.addColorStop(0.3, '#ffffaa');
+      antGrad.addColorStop(0.65, '#facc15');
+      antGrad.addColorStop(1, '#b45309');
+
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = Math.max(20, zoom * 2.5);
+      ctx.beginPath();
+      ctx.arc(0, 0, antR, 0, Math.PI * 2);
+      ctx.fillStyle = antGrad;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Direction arrow: small white triangle pointing in ant's direction
+      ctx.rotate((ant.dir * 90 * Math.PI) / 180);
+      const arrowSize = Math.max(3, antR * 0.55);
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.beginPath();
+      ctx.moveTo(0, -arrowSize);
+      ctx.lineTo(arrowSize * 0.55, arrowSize * 0.6);
+      ctx.lineTo(-arrowSize * 0.55, arrowSize * 0.6);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    /* ── Render Throttle ──────────────────────────────────────── */
+    let lastRenderTime = 0;
+    const TARGET_FRAME_MS = 50; // max 20fps render
+    let renderPending = false;
+
+    function render(force = false) {
+      const now = performance.now();
+      if (!force && (now - lastRenderTime) < TARGET_FRAME_MS) {
+        if (!renderPending) {
+          renderPending = true;
+          setTimeout(() => { renderPending = false; renderCore(); }, TARGET_FRAME_MS);
+        }
+        return;
+      }
+      lastRenderTime = now;
+      renderCore();
+    }
+
+
+
+    /* ── Camera & Auto-Follow ───────────────────────────────── */
+    function updateCameraFollow() {
+      if (document.getElementById('autoFollowCheck').checked) {
+        const targetPanX = -ant.x * zoom;
+        const targetPanY = -ant.y * zoom;
+        panX += (targetPanX - panX) * 0.15;
+        panY += (targetPanY - panY) * 0.15;
+      }
+    }
+
+    /* ── Main Loop ──────────────────────────────────────────── */
+    // Helper: if n is prime return n, else return the next prime after n
+    function getCurrentOrNextPrime(n) {
+      if (n >= 2 && isPrime(n)) return n;
+      return getNextPrime(n);
+    }
+
+    function animLoop(timestamp) {
+      if (!isRunning) return;
+
+      // Fast prime-jump batch: skip composite stretches in O(1).
+      // Invariant: stepCount = the step number we are ABOUT to process.
+      // If stepCount is prime  → process it now (flip+turn+move 1).
+      // If stepCount composite → find next prime P, walk straight to P's cell,
+      //                          flip+turn at P, move 1, set stepCount = P+1.
+      const targetStep = stepCount + stepsPerFrame;
+      let stepped = 0;
+
+      while (stepCount < targetStep) {
+        const curP = getCurrentOrNextPrime(stepCount);
+
+        if (curP >= targetStep) {
+          // Only composites remain this frame → walk straight, no color change
+          const dist = targetStep - stepCount;
+          trackSegmentAxisCrossings(ant.x, ant.y, ant.dir, dist);
+          ant.x += dx[ant.dir] * dist;
+          ant.y += dy[ant.dir] * dist;
+          trackBounds(ant.x, ant.y);
+          stepped += dist;
+          stepCount = targetStep;
+        } else {
+          // Walk straight composites up to the prime cell (0 steps if stepCount === curP)
+          const dist = curP - stepCount;
+          if (dist > 0) {
+            trackSegmentAxisCrossings(ant.x, ant.y, ant.dir, dist);
+            ant.x += dx[ant.dir] * dist;
+            ant.y += dy[ant.dir] * dist;
+            trackBounds(ant.x, ant.y);
+          }
+      // At prime cell: flip color & turn
+          const key = `${ant.x},${ant.y}`;
+          const pType = getPrimeType(curP);
+          if (pType === 'TWIN_SECOND' || pType === 'TWIN_FIRST_OR_ISOLATED') {
+            const curVisit = grid.get(key) || 0;
+            const newVisit = curVisit + 1;
+            if (newVisit % 2 === 0) {
+              grid.delete(key); // Even = off
+            } else {
+              grid.set(key, newVisit); // Odd = lit
+            }
+          }
+          if (pType === 'TWIN_SECOND') {
+            ant.dir = (ant.dir + 3) % 4;
+          } else if (pType === 'TWIN_FIRST_OR_ISOLATED') {
+            ant.dir = (ant.dir + 1) % 4;
+          }
+          // Move one step forward after turn
+          ant.x += dx[ant.dir];
+          ant.y += dy[ant.dir];
+          trackBounds(ant.x, ant.y);
+
+          // ── Research Data Tracking ──
+          // Prime gap stats
+          if (lastPrimeStep !== null) {
+            const gap = curP - lastPrimeStep;
+            if (gap < minPrimeGap) minPrimeGap = gap;
+            if (gap > maxPrimeGap) maxPrimeGap = gap;
+            sumPrimeGaps += gap;
+            gapCount++;
+          }
+          lastPrimeStep = curP;
+          // Direction frequency
+          dirFreq[ant.dir]++;
+          // Turn counts
+          if (pType === 'TWIN_FIRST_OR_ISOLATED') totalRightTurns++;
+          else if (pType === 'TWIN_SECOND') totalLeftTurns++;
+          // Total cell visits
+          totalCellVisits++;
+          // Prime events log (ring buffer)
+          if (primeEvents.length < MAX_PRIME_EVENTS) {
+            primeEvents.push({ step: curP, x: ant.x, y: ant.y, pType });
+          }
+
+          stepped += dist + 1;
+          stepCount = curP + 1;
+        }
+      }
+
+      // Peak cells tracking
+      if (grid.size > peakActiveCells) {
+        peakActiveCells = grid.size;
+        peakActiveCellsStep = stepCount;
+      }
+      // Growth sample
+      if (stepCount >= nextGrowthSample) {
+        growthSamples.push({ step: stepCount, cells: grid.size, x: ant.x, y: ant.y });
+        nextGrowthSample += GROWTH_SAMPLE_INTERVAL;
+      }
+
+      totalStepsThisSecond += stepped;
+
+      // Performance stats
+      frameCount++;
+      const elapsed = timestamp - lastFrameTime;
+      if (elapsed >= 1000) {
+        currentFps = Math.round((frameCount * 1000) / elapsed);
+        currentSps = Math.round((totalStepsThisSecond * 1000) / elapsed);
+        frameCount = 0;
+        totalStepsThisSecond = 0;
+        lastFrameTime = timestamp;
+      }
+
+      updateCameraFollow();
+      updateUI();
+      render();
+
+      animationFrameId = requestAnimationFrame(animLoop);
+    }
+
+    /* ── Report & Export Functions ──────────────────────────── */
+    const DIR_LABELS = ['\u2191 UP','\u2192 RIGHT','\u2193 DOWN','\u2190 LEFT'];
+    const DIR_COLORS = ['#60a5fa','#22c55e','#f87171','#a78bfa'];
+
+    function fmt(n) { return (typeof n === 'number') ? n.toLocaleString() : n; }
+    function fmtMs(ms) {
+      if (ms < 1000) return ms + 'ms';
+      const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
+      if (h > 0) return `${h}h ${m%60}m ${s%60}s`;
+      if (m > 0) return `${m}m ${s%60}s`;
+      return `${s}s`;
+    }
+
+    function showReport() {
+      const label = document.getElementById('experimentLabel')?.value || 'Untitled';
+      const durationMs = (runEndTime || Date.now()) - (runStartTime || Date.now());
+      const stepsRun = stepCount - runStartStep;
+      const throughput = durationMs > 0 ? Math.round(stepsRun / (durationMs/1000)) : 0;
+      const scheme = COLOR_SCHEMES[currentColorScheme]?.label || currentColorScheme;
+      const totalPrimes = totalRightTurns + totalLeftTurns;
+      const ratio = totalLeftTurns > 0 ? (totalRightTurns/totalLeftTurns).toFixed(5) : '∞';
+      const avgGap = gapCount > 0 ? (sumPrimeGaps/gapCount).toFixed(2) : '-';
+      const b = graphBounds;
+      const maxDist = Math.max(
+        Math.abs(ant.x), Math.abs(ant.y),
+        Math.sqrt(ant.x*ant.x + ant.y*ant.y)
+      );
+
+      document.getElementById('rptLabel').innerText = label;
+      document.getElementById('rptSteps').innerText = fmt(stepCount);
+      document.getElementById('rptDuration').innerText = fmtMs(durationMs);
+      document.getElementById('rptThroughput').innerText = fmt(throughput) + ' steps/s';
+      document.getElementById('rptColorMode').innerText = scheme;
+      document.getElementById('rptPrimesHit').innerText = fmt(totalPrimes);
+      document.getElementById('rptRightTurns').innerText = fmt(totalRightTurns);
+      document.getElementById('rptLeftTurns').innerText = fmt(totalLeftTurns);
+      document.getElementById('rptTurnRatio').innerText = ratio;
+      document.getElementById('rptMinGap').innerText = minPrimeGap === Infinity ? '-' : fmt(minPrimeGap);
+      document.getElementById('rptMaxGap').innerText = fmt(maxPrimeGap);
+      document.getElementById('rptAvgGap').innerText = avgGap;
+      document.getElementById('rptFinalPos').innerText = `(${fmt(ant.x)}, ${fmt(ant.y)}) ${dirSymbols[ant.dir]}`;
+      document.getElementById('rptMaxDist').innerText = fmt(Math.round(maxDist)) + ' cells';
+      document.getElementById('rptBBox').innerText = `${fmt(b.maxX-b.minX+1)} × ${fmt(b.maxY-b.minY+1)}`;
+      document.getElementById('rptMaxUp').innerText = 'Y = ' + fmt(b.minY);
+      document.getElementById('rptMaxDown').innerText = 'Y = ' + fmt(b.maxY);
+      document.getElementById('rptMaxLeft').innerText = 'X = ' + fmt(b.minX);
+      document.getElementById('rptMaxRight').innerText = 'X = ' + fmt(b.maxX);
+      document.getElementById('rptXCross').innerText = fmt(xAxisCrossings) + ' times';
+      document.getElementById('rptYCross').innerText = fmt(yAxisCrossings) + ' times';
+      document.getElementById('rptLastXCross').innerText = lastCrossStepX !== null ? `Step ~${fmt(lastCrossStepX)}` : '-';
+      document.getElementById('rptLastYCross').innerText = lastCrossStepY !== null ? `Step ~${fmt(lastCrossStepY)}` : '-';
+      document.getElementById('rptActiveCells').innerText = fmt(grid.size);
+      document.getElementById('rptPeakCells').innerText = fmt(peakActiveCells);
+      document.getElementById('rptPeakStep').innerText = 'Step ' + fmt(peakActiveCellsStep);
+      document.getElementById('rptTotalVisits').innerText = fmt(totalCellVisits);
+
+      // Direction bars
+      const totalDir = dirFreq.reduce((a,b) => a+b, 0) || 1;
+      const dirBarsEl = document.getElementById('rptDirBars');
+      dirBarsEl.innerHTML = DIR_LABELS.map((lbl,i) => {
+        const pct = ((dirFreq[i]/totalDir)*100).toFixed(1);
+        return `<div class="report-bar-row">
+          <div class="report-bar-label">${lbl.split(' ')[0]}</div>
+          <div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%;background:${DIR_COLORS[i]};"></div></div>
+          <div class="report-bar-count">${fmt(dirFreq[i])} (${pct}%)</div>
+        </div>`;
+      }).join('');
+
+      document.getElementById('reportModal').classList.add('active');
+    }
+
+    function closeReport() {
+      document.getElementById('reportModal').classList.remove('active');
+    }
+
+    /* ── Screenshot ── */
+    function screenshotCanvas() {
+      const canvas = document.getElementById('antCanvas');
+      const label = (document.getElementById('experimentLabel')?.value || 'run').replace(/[^a-z0-9]/gi,'_');
+      const link = document.createElement('a');
+      link.download = `prime_ant_${label}_step${stepCount}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function screenshotWithStats() {
+      const srcCanvas = document.getElementById('antCanvas');
+      const offscreen = document.createElement('canvas');
+      offscreen.width = srcCanvas.width;
+      offscreen.height = srcCanvas.height;
+      const ctx2 = offscreen.getContext('2d');
+      ctx2.drawImage(srcCanvas, 0, 0);
+
+      // Stats overlay
+      const label = document.getElementById('experimentLabel')?.value || 'Run';
+      const lines = [
+        label,
+        `Step: ${stepCount.toLocaleString()}`,
+        `Pos: (${ant.x}, ${ant.y}) ${dirSymbols[ant.dir]}`,
+        `Active Cells: ${grid.size.toLocaleString()}`,
+        `Color Mode: ${COLOR_SCHEMES[currentColorScheme]?.label}`,
+        `Date: ${new Date().toLocaleString()}`,
+      ];
+      const fontSize = Math.max(12, Math.min(18, offscreen.height / 50));
+      ctx2.font = `bold ${fontSize}px JetBrains Mono, monospace`;
+      const pad = 12, lineH = fontSize * 1.5;
+      const boxW = 380, boxH = lines.length * lineH + pad * 2;
+      const x0 = pad, y0 = offscreen.height - boxH - pad;
+      ctx2.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx2.beginPath();
+      ctx2.roundRect(x0, y0, boxW, boxH, 8);
+      ctx2.fill();
+      ctx2.fillStyle = '#facc15';
+      lines.forEach((ln, i) => {
+        ctx2.fillText(ln, x0 + pad, y0 + pad + (i+1)*lineH - 4);
+      });
+
+      const label2 = (label).replace(/[^a-z0-9]/gi,'_');
+      const link = document.createElement('a');
+      link.download = `prime_ant_stats_${label2}_step${stepCount}.png`;
+      link.href = offscreen.toDataURL('image/png');
+      link.click();
+    }
+
+    /* ── CSV / JSON Exports ── */
+    function downloadText(content, filename, mime='text/plain') {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function exportCSV() {
+      const label = (document.getElementById('experimentLabel')?.value || 'run').replace(/[^a-z0-9]/gi,'_');
+      let csv = 'step,x,y,prime_type\n';
+      for (const ev of primeEvents) {
+        csv += `${ev.step},${ev.x},${ev.y},${ev.pType}\n`;
+      }
+      downloadText(csv, `prime_events_${label}_step${stepCount}.csv`, 'text/csv');
+    }
+
+    function exportGrowthCSV() {
+      const label = (document.getElementById('experimentLabel')?.value || 'run').replace(/[^a-z0-9]/gi,'_');
+      let csv = 'step,active_cells,ant_x,ant_y\n';
+      for (const s of growthSamples) {
+        csv += `${s.step},${s.cells},${s.x},${s.y}\n`;
+      }
+      // Also add current
+      csv += `${stepCount},${grid.size},${ant.x},${ant.y}\n`;
+      downloadText(csv, `growth_${label}_step${stepCount}.csv`, 'text/csv');
+    }
+
+    function exportJSON() {
+      const label = document.getElementById('experimentLabel')?.value || 'Run';
+      const snapshot = {
+        label, stepCount,
+        ant: { x: ant.x, y: ant.y, dir: ant.dir },
+        colorScheme: currentColorScheme,
+        graphBounds,
+        xAxisCrossings, yAxisCrossings,
+        totalRightTurns, totalLeftTurns,
+        dirFreq,
+        minPrimeGap: minPrimeGap === Infinity ? null : minPrimeGap,
+        maxPrimeGap, avgPrimeGap: gapCount > 0 ? sumPrimeGaps/gapCount : null,
+        peakActiveCells, peakActiveCellsStep,
+        totalCellVisits,
+        growthSamples,
+        grid: [...grid.entries()],
+        savedAt: new Date().toISOString(),
+      };
+      const lbl = label.replace(/[^a-z0-9]/gi,'_');
+      downloadText(JSON.stringify(snapshot, null, 2), `snapshot_${lbl}_step${stepCount}.json`, 'application/json');
+    }
+
+    /* ── UI Updates ─────────────────────────────────────────── */
+    function updateUI() {
+      document.getElementById('statStep').innerText = stepCount.toLocaleString();
+      document.getElementById('statPos').innerText = `(${ant.x}, ${ant.y}) ${dirSymbols[ant.dir]}`;
+      document.getElementById('statActiveCells').innerText = `${grid.size.toLocaleString()} cells`;
+      document.getElementById('statFps').innerText = `${currentFps} FPS | ${currentSps.toLocaleString()} steps/s`;
+
+      // Turn Decision badge
+      const pType = getPrimeType(stepCount);
+      const badge = document.getElementById('statTurnBadge');
+      if (pType === 'TWIN_SECOND') {
+        badge.className = 'badge-turn turn-left';
+        badge.innerText = '↺ TURN LEFT (2nd Twin Prime)';
+      } else if (pType === 'TWIN_FIRST_OR_ISOLATED') {
+        badge.className = 'badge-turn turn-right';
+        badge.innerText = '↻ TURN RIGHT (1st Twin / Isolated Prime)';
+      } else {
+        badge.className = 'badge-turn turn-straight';
+        badge.innerText = '⬆ STRAIGHT (Composite)';
+      }
+
+      // Prime info
+      const prevP = getPrevPrime(stepCount) || '-';
+      const nextP = getNextPrime(stepCount);
+      const gap = typeof prevP === 'number' ? nextP - prevP : '-';
+      document.getElementById('statPrimeInfo').innerText = `Last: ${prevP} | Next: ${nextP} (Gap: ${gap})`;
+
+      // 0-Line Axis Intersections
+      const elXCross   = document.getElementById('statXCross');
+      const elYCross   = document.getElementById('statYCross');
+      const elTotCross = document.getElementById('statTotalCross');
+
+      if (elXCross)   elXCross.innerText   = xAxisCrossings.toLocaleString();
+      if (elYCross)   elYCross.innerText   = yAxisCrossings.toLocaleString();
+      if (elTotCross) elTotCross.innerText = `${(xAxisCrossings + yAxisCrossings).toLocaleString()} times`;
+
+      // Graph Extremes (Pixel to Pixel)
+      const elUp    = document.getElementById('statMaxUp');
+      const elDown  = document.getElementById('statMaxDown');
+      const elLeft  = document.getElementById('statMaxLeft');
+      const elRight = document.getElementById('statMaxRight');
+      const elDim   = document.getElementById('statDimensions');
+
+      if (elUp)    elUp.innerText    = `Y = ${graphBounds.minY}`;
+      if (elDown)  elDown.innerText  = `Y = ${graphBounds.maxY}`;
+      if (elLeft)  elLeft.innerText  = `X = ${graphBounds.minX}`;
+      if (elRight) elRight.innerText = `X = ${graphBounds.maxX}`;
+      if (elDim) {
+        const w = graphBounds.maxX - graphBounds.minX + 1;
+        const h = graphBounds.maxY - graphBounds.minY + 1;
+        elDim.innerText = `${w.toLocaleString()} × ${h.toLocaleString()} px`;
+      }
+    }
+
+    /* ── Controls Handlers ───────────────────────────────────── */
+    /* ── State Machine Controls ──────────────────────────────── */
+    function lockSettings(lock) {
+      const lockable = document.getElementById('lockableSettings');
+      const expWrap = document.getElementById('expLabelWrap');
+      const colorBadge = document.getElementById('colorLockBadge');
+      const stepBtn = document.getElementById('btnStepOnce');
+      const jumpBtn = document.getElementById('btnPrimeJump');
+      if (lock) {
+        lockable.classList.add('setting-locked');
+        expWrap.classList.add('setting-locked');
+        colorBadge.style.display = 'inline';
+        if(stepBtn) stepBtn.disabled = true;
+        if(jumpBtn) jumpBtn.disabled = true;
+      } else {
+        lockable.classList.remove('setting-locked');
+        expWrap.classList.remove('setting-locked');
+        colorBadge.style.display = 'none';
+        if(stepBtn) stepBtn.disabled = false;
+        if(jumpBtn) jumpBtn.disabled = false;
+      }
+    }
+
+    function togglePlay() {
+      const playIcon = document.getElementById('playIcon');
+      const playText = document.getElementById('playText');
+      const btn = document.getElementById('btnPlay');
+
+      if (simState === 'idle' || simState === 'stopped') {
+        // ── START ──
+        simState = 'running';
+        isRunning = true;
+        runStartTime = Date.now();
+        runStartStep = stepCount;
+        peakActiveCells = grid.size;
+        peakActiveCellsStep = stepCount;
+        lockSettings(true);
+        playIcon.innerText = '⏹';
+        playText.innerText = 'Stop & Get Report';
+        btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        btn.style.boxShadow = '0 4px 14px rgba(239,68,68,0.4)';
+        lastFrameTime = performance.now();
+        frameCount = 0;
+        totalStepsThisSecond = 0;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animationFrameId = requestAnimationFrame(animLoop);
+
+      } else if (simState === 'running') {
+        // ── STOP → REPORT ──
+        simState = 'stopped';
+        isRunning = false;
+        runEndTime = Date.now();
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        lockSettings(false);
+        playIcon.innerText = '▶';
+        playText.innerText = 'New Run (Keep Data)';
+        btn.style.background = 'linear-gradient(135deg, #a855f7, #ec4899)';
+        btn.style.boxShadow = '';
+        // Increment run number for next experiment label
+        const labelEl = document.getElementById('experimentLabel');
+        runNumber++;
+        if (labelEl && labelEl.value.startsWith('Run #')) {
+          labelEl.value = `Run #${runNumber}`;
+        }
+        showReport();
+      }
+    }
+
+    function stepOnce() {
+      if (isRunning) togglePlay();
+      performSingleStep();
+      updateCameraFollow();
+      updateUI();
+      render();
+    }
+
+    async function resetSim() {
+      if (isRunning) {
+        simState = 'idle';
+        isRunning = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      }
+      // Reset simulation state
+      grid.clear();
+      ant = { x: 0, y: 0, dir: 0 };
+      stepCount = 1;
+      graphBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+      panX = 0;
+      panY = 0;
+      xAxisCrossings = 0;
+      yAxisCrossings = 0;
+      // Reset research tracking
+      simState = 'idle';
+      runStartTime = null;
+      runEndTime = null;
+      runStartStep = 0;
+      peakActiveCells = 0;
+      peakActiveCellsStep = 0;
+      totalCellVisits = 0;
+      minPrimeGap = Infinity;
+      maxPrimeGap = 0;
+      sumPrimeGaps = 0;
+      gapCount = 0;
+      lastPrimeStep = null;
+      dirFreq = [0,0,0,0];
+      totalRightTurns = 0;
+      totalLeftTurns = 0;
+      primeEvents = [];
+      growthSamples = [];
+      nextGrowthSample = GROWTH_SAMPLE_INTERVAL;
+      lastCrossStepX = null;
+      lastCrossStepY = null;
+      // Reset play button
+      const playIcon = document.getElementById('playIcon');
+      const playText = document.getElementById('playText');
+      const btn = document.getElementById('btnPlay');
+      if (playIcon) playIcon.innerText = '▶';
+      if (playText) playText.innerText = 'Start Simulation';
+      if (btn) { btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)'; btn.style.boxShadow = ''; }
+      lockSettings(false);
+      closeReport();
+      updateUI();
+      render();
+    }
+
+    function fitGraphToView() {
+
+      recalculateBounds();
+      const b = graphBounds;
+
+      // Expand bounds to always include ant's current position
+      const minX = Math.min(b.minX, ant.x);
+      const maxX = Math.max(b.maxX, ant.x);
+      const minY = Math.min(b.minY, ant.y);
+      const maxY = Math.max(b.maxY, ant.y);
+
+      const w = Math.max(1, maxX - minX + 1);
+      const h = Math.max(1, maxY - minY + 1);
+
+      const pad = 60; // Padding in screen pixels
+      const availW = Math.max(100, canvas.width - pad * 2);
+      const availH = Math.max(100, canvas.height - pad * 2);
+
+      const zoomX = availW / w;
+      const zoomY = availH / h;
+      zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.min(zoomX, zoomY)));
+
+      // Center on full bounds (grid + ant)
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      panX = -centerX * zoom;
+      panY = -centerY * zoom;
+
+      const autoFollow = document.getElementById('autoFollowCheck');
+      if (autoFollow) autoFollow.checked = false;
+
+      updateZoomHUD();
+      updateUI();
+      render(true);
+    }
+
+    function updateSpeed(val) {
+      stepsPerFrame = parseInt(val, 10);
+      document.getElementById('speedDisplay').innerText = `${stepsPerFrame.toLocaleString()} steps/frame`;
+    }
+
+    function changeTheme(theme) {
+      document.body.setAttribute('data-theme', theme);
+      render();
+    }
+
+    /* ── Zoom & Pan Controls (Infinite Zoom) ──────────────────── */
+    const ZOOM_MIN = 0.00001;   // ~1 cell covers entire universe view
+    const ZOOM_MAX = 100000;    // ~100000px per cell (extreme close-up)
+
+    function applyZoom(factor, pivotX, pivotY) {
+      // pivotX/Y: canvas-relative pixel coords (zoom center point)
+      const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom * factor));
+      const ratio = newZoom / zoom;
+      // Adjust pan so the point under cursor stays fixed
+      panX = pivotX - ratio * (pivotX - panX);
+      panY = pivotY - ratio * (pivotY - panY);
+      zoom = newZoom;
+      updateZoomHUD();
+      render();
+    }
+
+    function updateZoomHUD() {
+      const el = document.getElementById('zoomLevelHud');
+      if (!el) return;
+      let label;
+      if (zoom >= 1000) label = `×${(zoom/1000).toFixed(1)}k`;
+      else if (zoom >= 1) label = `×${zoom.toFixed(1)}`;
+      else if (zoom >= 0.001) label = `×${zoom.toFixed(4)}`;
+      else label = `×${zoom.toExponential(2)}`;
+      el.innerText = label;
+    }
+
+    function zoomIn()  { applyZoom(1.25, canvas.width / 2, canvas.height / 2); }
+    function zoomOut() { applyZoom(0.80, canvas.width / 2, canvas.height / 2); }
+    function centerAnt() { panX = -ant.x * zoom; panY = -ant.y * zoom; render(); }
+    function resetView() { zoom = 14; panX = 0; panY = 0; updateZoomHUD(); render(); }
+
+    // Mouse Drag Pan
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      dragStart = { x: e.clientX - panX, y: e.clientY - panY };
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        panX = e.clientX - dragStart.x;
+        panY = e.clientY - dragStart.y;
+        document.getElementById('autoFollowCheck').checked = false;
+        render();
+      }
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Scroll Zoom — zooms toward mouse cursor position (infinite range)
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      // Adaptive factor: slower when very zoomed in/out
+      const factor = e.deltaY < 0 ? 1.12 : (1 / 1.12);
+      applyZoom(factor, mouseX, mouseY);
+    }, { passive: false });
+
+    // Pinch-to-Zoom (Touch)
+    let lastTouchDist = null;
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        lastTouchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && lastTouchDist !== null) {
+        e.preventDefault();
+        const newDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const rect = canvas.getBoundingClientRect();
+        const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+        const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+        applyZoom(newDist / lastTouchDist, midX, midY);
+        lastTouchDist = newDist;
+      }
+    }, { passive: false });
+    container.addEventListener('touchend', () => { lastTouchDist = null; }, { passive: true });
+
+    /* ── Initialization ────────────────────────────────────── */
+    resizeCanvas();
+    loadState().then((restored) => {
+      updateUI();
+      updateZoomHUD();
+      render();
+      if (restored) {
+        console.log(`✅ State restored: Step ${stepCount.toLocaleString()}, ${grid.size} cells`);
+      }
+    });
+  </script>
+</body>
+</html>
